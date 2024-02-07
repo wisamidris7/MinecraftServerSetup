@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -10,24 +10,47 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static string serverJar(string version) => $"{serverDir}/server-{version}.jar";
+        static async Task RunServer(string port, string opUser, string version)
+        {
+            if (!File.Exists(serverJar(version)))
+            {
+                Console.WriteLine($"Error: {serverJar(version)} not found. Please download it and place it in the data folder.");
+                return;
+            }
+
+            Console.WriteLine("Starting the Minecraft server...");
+            Process serverProcess = new Process();
+            serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
+            serverProcess.StartInfo.FileName = javaBinary;
+            serverProcess.StartInfo.Arguments = $"-Xmx{GetMaxMemory()}M -Xms1024M -jar ../{serverJar(version)} nogui --port {port}";
+            serverProcess.StartInfo.WorkingDirectory = serverDir;
+            serverProcess.StartInfo.RedirectStandardOutput = true;
+            serverProcess.StartInfo.RedirectStandardError = true;
+            serverProcess.StartInfo.RedirectStandardInput = true;
+            serverProcess.StartInfo.UseShellExecute = false;
+            serverProcess.StartInfo.CreateNoWindow = true;
+            serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
+            serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
+            serverProcess.Start();
+            serverProcess.BeginOutputReadLine();
+            serverProcess.BeginErrorReadLine();
+            await serverProcess.StandardInput.WriteLineAsync($"op {opUser}");
+            await serverProcess.WaitForExitAsync();
+        }
+
         static string tempServerJar(string version) => $"{serverDir}/tmp_server-{version}.jar";
         static string javaDir = $"{serverDir}/java";
         static string javaBinary = $"{javaDir}/jdk-21.0.4/bin/java.exe";
-
         static async Task Main(string[] args)
         {
             Directory.CreateDirectory(serverDir);
-
             string mcVersion = string.Empty;
             string port = "25565";
             string opUser = string.Empty;
-
-            if (File.Exists(configFile))
+            if (!(File.Exists(configFile)))
             {
                 Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
                 var usePrevConfig = Console.ReadLine().ToLower() == "y";
-
                 if (usePrevConfig)
                 {
                     var configLines = File.ReadAllLines(configFile);
@@ -59,7 +82,6 @@ namespace MinecraftServerSetup
 
                 Console.WriteLine("Enter the username to be OP: ");
                 opUser = Console.ReadLine();
-
                 SaveConfiguration(mcVersion, port, opUser);
             }
 
@@ -80,12 +102,10 @@ namespace MinecraftServerSetup
             {
                 Console.WriteLine("Downloading the latest compatible Java version...");
                 string javaUrl = "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip";
-
                 using (WebClient client = new WebClient())
                 {
                     string javaZip = $"{serverDir}/java.zip";
                     await AdvancedDownloadFile(client, javaUrl, javaZip);
-
                     Console.WriteLine("Extracting Java...");
                     System.IO.Compression.ZipFile.ExtractToDirectory(javaZip, javaDir);
                     File.Delete(javaZip);
@@ -98,7 +118,6 @@ namespace MinecraftServerSetup
         static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
         {
             Console.WriteLine("Starting download...");
-
             Stopwatch stopwatch = Stopwatch.StartNew();
             var currentCursorTop = Console.CursorTop;
             var currentCursorLeft = Console.CursorLeft;
@@ -113,21 +132,22 @@ namespace MinecraftServerSetup
                 Console.SetCursorPosition(0, currentCursorTop);
                 Console.WriteLine($"Downloaded: {FormatBytes(e.BytesReceived)} / {FormatBytes(totalBytes)} {FormatBytes(bytesPerSecond)}/s");
             };
-
             client.DownloadFileCompleted += (s, e) =>
             {
                 stopwatch.Stop();
                 Console.WriteLine("Download complete.");
             };
-
             return client.DownloadFileTaskAsync(new Uri(url), destinationPath);
         }
 
         static string FormatBytes(double bytes)
         {
-            if (bytes >= 1_073_741_824) return $"{bytes / 1_073_741_824:F2} GB";
-            if (bytes >= 1_048_576) return $"{bytes / 1_048_576:F2} MB";
-            if (bytes >= 1_024) return $"{bytes / 1_024:F2} KB";
+            if (bytes >= 1_073_741_824)
+                return $"{bytes / 1_073_741_824:F2} GB";
+            if (bytes >= 1_048_576)
+                return $"{bytes / 1_048_576:F2} MB";
+            if (bytes >= 1_024)
+                return $"{bytes / 1_024:F2} KB";
             return $"{bytes} B";
         }
 
@@ -143,19 +163,19 @@ namespace MinecraftServerSetup
             {
                 File.Delete(tempServerJar(version));
             }
-            Console.WriteLine($"Downloading Minecraft server version {version}...");
 
+            Console.WriteLine($"Downloading Minecraft server version {version}...");
             string downloadUrl = $"https://launcher.mojang.com/v1/objects/{await GetServerJarHash(version)}/server.jar";
             using (WebClient client = new WebClient())
             {
                 await AdvancedDownloadFile(client, downloadUrl, tempServerJar(version));
             }
 
-
             if (File.Exists(tempServerJar(version)))
             {
                 File.Move(tempServerJar(version), serverJar(version));
             }
+
             Console.WriteLine("Download complete.");
         }
 
@@ -165,10 +185,8 @@ namespace MinecraftServerSetup
             {
                 string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
                 JObject json = JObject.Parse(manifest);
-
                 JArray versions = (JArray)json["versions"];
                 JToken versionInfo = versions.FirstOrDefault(v => v["id"].ToString() == version);
-
                 if (versionInfo == null)
                 {
                     throw new Exception("Version not found.");
@@ -177,7 +195,6 @@ namespace MinecraftServerSetup
                 string versionUrl = versionInfo["url"].ToString();
                 string versionManifest = client.DownloadString(versionUrl);
                 JObject versionJson = JObject.Parse(versionManifest);
-
                 return versionJson["downloads"]["server"]["sha1"].ToString();
             }
         }
@@ -198,13 +215,14 @@ namespace MinecraftServerSetup
                 {
                     properties[i] = "online-mode=false";
                 }
+
                 if (properties[i].StartsWith("server-port="))
                 {
                     properties[i] = $"server-port={port}";
                 }
             }
-            File.WriteAllLines($"{serverDir}/server.properties", properties);
 
+            File.WriteAllLines($"{serverDir}/server.properties", properties);
             string[] eula = File.ReadAllLines($"{serverDir}/eula.txt");
             for (int i = 0; i < eula.Length; i++)
             {
@@ -213,6 +231,7 @@ namespace MinecraftServerSetup
                     eula[i] = "eula=true";
                 }
             }
+
             File.WriteAllLines($"{serverDir}/eula.txt", eula);
             Console.Clear();
             await Task.Delay(1000);
@@ -229,21 +248,18 @@ namespace MinecraftServerSetup
             serverProcess.StartInfo.RedirectStandardError = true;
             serverProcess.StartInfo.UseShellExecute = false;
             serverProcess.StartInfo.CreateNoWindow = true;
-
             serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
             serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
-
             serverProcess.Start();
             serverProcess.BeginOutputReadLine();
             serverProcess.BeginErrorReadLine();
-
             serverProcess.WaitForExit();
-
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties"))
+            while (!File.Exists($"{serverDir}/server.properties") && true)
             {
                 await Task.Delay(1000);
             }
+
             await Task.Delay(4000);
         }
 
@@ -256,7 +272,6 @@ namespace MinecraftServerSetup
             }
 
             Console.WriteLine("Starting the Minecraft server...");
-
             Process serverProcess = new Process();
             serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
             serverProcess.StartInfo.FileName = javaBinary;
@@ -267,16 +282,12 @@ namespace MinecraftServerSetup
             serverProcess.StartInfo.RedirectStandardInput = true;
             serverProcess.StartInfo.UseShellExecute = false;
             serverProcess.StartInfo.CreateNoWindow = true;
-
             serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
             serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
-
             serverProcess.Start();
             serverProcess.BeginOutputReadLine();
             serverProcess.BeginErrorReadLine();
-
             await serverProcess.StandardInput.WriteLineAsync($"op {opUser}");
-
             await serverProcess.WaitForExitAsync();
         }
 
@@ -291,13 +302,8 @@ namespace MinecraftServerSetup
             {
                 string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
                 JObject json = JObject.Parse(manifest);
-
                 JArray versions = (JArray)json["versions"];
-                JToken latestRelease = versions
-                    .Where(v => v["type"].ToString() == "release")
-                    .OrderByDescending(v => v["releaseTime"].ToString())
-                    .FirstOrDefault();
-
+                JToken latestRelease = versions.Where(v => v["type"].ToString() == "release").OrderByDescending(v => v["releaseTime"].ToString()).FirstOrDefault();
                 if (latestRelease == null)
                 {
                     throw new Exception("No release version found.");
@@ -307,5 +313,4 @@ namespace MinecraftServerSetup
             }
         }
     }
-
 }
