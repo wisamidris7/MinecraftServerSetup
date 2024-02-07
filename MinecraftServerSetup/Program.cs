@@ -10,32 +10,43 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static async Task SetupServer(string version)
+        static async Task ConfigureServer(string port, string version)
         {
-            if (File.Exists(serverJar(version)))
+            if (!File.Exists($"{serverDir}/server.properties"))
             {
-                Console.WriteLine($"Version {version} already exists, skipping download.");
+                Console.WriteLine("Starting the server to generate configuration files...");
+                await RunServerOnceToGenerateConfigs(port, version);
                 return;
             }
 
-            if (File.Exists(tempServerJar(version)))
+            string[] properties = File.ReadAllLines($"{serverDir}/server.properties");
+            for (int i = 0; i < properties.Length; i++)
             {
-                File.Delete(tempServerJar(version));
+                if (properties[i].StartsWith("online-mode="))
+                {
+                    properties[i] = "online-mode=false";
+                }
+
+                if (properties[i].StartsWith("server-port="))
+                {
+                    properties[i] = $"server-port={port}";
+                }
             }
 
-            Console.WriteLine($"Downloading Minecraft server version {version}...");
-            string downloadUrl = $"https://launcher.mojang.com/v1/objects/{await GetServerJarHash(version)}/server.jar";
-            using (WebClient client = new WebClient())
+            File.WriteAllLines($"{serverDir}/server.properties", properties);
+            string[] eula = File.ReadAllLines($"{serverDir}/eula.txt");
+            for (int i = 0; i < eula.Length; i++)
             {
-                await AdvancedDownloadFile(client, downloadUrl, tempServerJar(version));
+                if (eula[i].StartsWith("eula=false"))
+                {
+                    eula[i] = "eula=true";
+                }
             }
 
-            if (File.Exists(tempServerJar(version)))
-            {
-                File.Move(tempServerJar(version), serverJar(version));
-            }
-
-            Console.WriteLine("Download complete.");
+            File.WriteAllLines($"{serverDir}/eula.txt", eula);
+            Console.Clear();
+            await Task.Delay(1000);
+            Console.WriteLine("Server setup done or it's already installed.");
         }
 
         static string tempServerJar(string version) => $"{serverDir}/tmp_server-{version}.jar";
@@ -255,7 +266,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true)
             {
                 await Task.Delay(1000);
             }
