@@ -10,9 +10,29 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static int GetMaxMemory()
+        static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
         {
-            return 1024 * 3;
+            Console.WriteLine("Starting download...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            var currentCursorTop = Console.CursorTop;
+            var currentCursorLeft = Console.CursorLeft;
+            client.DownloadProgressChanged += (s, e) =>
+            {
+                double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+                double bytesPerSecond = e.BytesReceived / elapsedSeconds;
+                double totalBytes = e.TotalBytesToReceive;
+                double remainingBytes = totalBytes - e.BytesReceived;
+                double estimatedRemainingSeconds = remainingBytes / bytesPerSecond;
+                Console.WriteLine();
+                Console.SetCursorPosition(0, currentCursorTop);
+                Console.WriteLine($"Downloaded: {FormatBytes(e.BytesReceived)} / {FormatBytes(totalBytes)} {FormatBytes(bytesPerSecond)}/s");
+            };
+            client.DownloadFileCompleted += (s, e) =>
+            {
+                stopwatch.Stop();
+                Console.WriteLine("Download complete.");
+            };
+            return client.DownloadFileTaskAsync(new Uri(url), destinationPath);
         }
 
         static async Task RunServerOnceToGenerateConfigs(string port, string version)
@@ -32,7 +52,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
@@ -48,7 +68,7 @@ namespace MinecraftServerSetup
             string mcVersion = string.Empty;
             string port = "25565";
             string opUser = string.Empty;
-            if (!(!(!(!(!(!(!(!(File.Exists(configFile))))))))))
+            if (!(!(!(!(!(!(!(!(!(File.Exists(configFile)))))))))))
             {
                 Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
                 var usePrevConfig = Console.ReadLine().ToLower() == "y";
