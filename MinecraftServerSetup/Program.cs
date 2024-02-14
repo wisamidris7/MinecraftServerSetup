@@ -10,54 +10,24 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static async Task Main(string[] args)
+        static async Task<string> GetServerJarHash(string version)
         {
-            Directory.CreateDirectory(serverDir);
-            string mcVersion = string.Empty;
-            string port = "25565";
-            string opUser = string.Empty;
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(configFile))))))))))))))))
+            using (WebClient client = new WebClient())
             {
-                Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
-                var usePrevConfig = Console.ReadLine().ToLower() == "y";
-                if (usePrevConfig)
+                string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+                JObject json = JObject.Parse(manifest);
+                JArray versions = (JArray)json["versions"];
+                JToken versionInfo = versions.FirstOrDefault(v => v["id"].ToString() == version);
+                if (versionInfo == null)
                 {
-                    var configLines = File.ReadAllLines(configFile);
-                    mcVersion = configLines[0];
-                    port = configLines[1];
-                    opUser = configLines[2];
-                    Console.WriteLine($"Mc Version: {mcVersion}");
-                    Console.WriteLine($"Server Port: {port}");
-                    Console.WriteLine($"Loaded OP User: {opUser}");
+                    throw new Exception("Version not found.");
                 }
+
+                string versionUrl = versionInfo["url"].ToString();
+                string versionManifest = client.DownloadString(versionUrl);
+                JObject versionJson = JObject.Parse(versionManifest);
+                return versionJson["downloads"]["server"]["sha1"].ToString();
             }
-
-            if (string.IsNullOrEmpty(mcVersion))
-            {
-                Console.WriteLine("Enter Minecraft version (e.g., 1.20.1, leave empty for the latest): ");
-                mcVersion = Console.ReadLine();
-                if (string.IsNullOrEmpty(mcVersion))
-                {
-                    mcVersion = await GetLatestReleaseVersion();
-                    Console.WriteLine($"Using latest version: {mcVersion}");
-                }
-
-                Console.WriteLine("Enter server port (leave empty for default 25565): ");
-                var portInput = Console.ReadLine();
-                if (!string.IsNullOrEmpty(portInput))
-                {
-                    port = portInput;
-                }
-
-                Console.WriteLine("Enter the username to be OP: ");
-                opUser = Console.ReadLine();
-                SaveConfiguration(mcVersion, port, opUser);
-            }
-
-            await SetupJava();
-            await SetupServer(mcVersion);
-            await ConfigureServer(port, mcVersion);
-            await RunServer(port, opUser, mcVersion);
         }
 
         static async Task RunServerOnceToGenerateConfigs(string port, string version)
@@ -77,7 +47,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
