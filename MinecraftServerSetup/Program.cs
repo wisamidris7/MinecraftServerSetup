@@ -68,7 +68,7 @@ namespace MinecraftServerSetup
             string mcVersion = string.Empty;
             string port = "25565";
             string opUser = string.Empty;
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(configFile))))))))))))))))))
+            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(configFile)))))))))))))))))))
             {
                 Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
                 var usePrevConfig = Console.ReadLine().ToLower() == "y";
