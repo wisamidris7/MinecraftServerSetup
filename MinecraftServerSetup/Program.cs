@@ -27,7 +27,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
@@ -62,54 +62,29 @@ namespace MinecraftServerSetup
 
         static string javaDir = $"{serverDir}/java";
         static string javaBinary = $"{javaDir}/jdk-21.0.4/bin/java.exe";
-        static async Task Main(string[] args)
+        static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
         {
-            Directory.CreateDirectory(serverDir);
-            string mcVersion = string.Empty;
-            string port = "25565";
-            string opUser = string.Empty;
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(configFile))))))))))))))))))))))))))))))
+            Console.WriteLine("Starting download...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            var currentCursorTop = Console.CursorTop;
+            var currentCursorLeft = Console.CursorLeft;
+            client.DownloadProgressChanged += (s, e) =>
             {
-                Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
-                var usePrevConfig = Console.ReadLine().ToLower() == "y";
-                if (usePrevConfig)
-                {
-                    var configLines = File.ReadAllLines(configFile);
-                    mcVersion = configLines[0];
-                    port = configLines[1];
-                    opUser = configLines[2];
-                    Console.WriteLine($"Mc Version: {mcVersion}");
-                    Console.WriteLine($"Server Port: {port}");
-                    Console.WriteLine($"Loaded OP User: {opUser}");
-                }
-            }
-
-            if (string.IsNullOrEmpty(mcVersion))
+                double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+                double bytesPerSecond = e.BytesReceived / elapsedSeconds;
+                double totalBytes = e.TotalBytesToReceive;
+                double remainingBytes = totalBytes - e.BytesReceived;
+                double estimatedRemainingSeconds = remainingBytes / bytesPerSecond;
+                Console.WriteLine();
+                Console.SetCursorPosition(0, currentCursorTop);
+                Console.WriteLine($"Downloaded: {FormatBytes(e.BytesReceived)} / {FormatBytes(totalBytes)} {FormatBytes(bytesPerSecond)}/s");
+            };
+            client.DownloadFileCompleted += (s, e) =>
             {
-                Console.WriteLine("Enter Minecraft version (e.g., 1.20.1, leave empty for the latest): ");
-                mcVersion = Console.ReadLine();
-                if (string.IsNullOrEmpty(mcVersion))
-                {
-                    mcVersion = await GetLatestReleaseVersion();
-                    Console.WriteLine($"Using latest version: {mcVersion}");
-                }
-
-                Console.WriteLine("Enter server port (leave empty for default 25565): ");
-                var portInput = Console.ReadLine();
-                if (!string.IsNullOrEmpty(portInput))
-                {
-                    port = portInput;
-                }
-
-                Console.WriteLine("Enter the username to be OP: ");
-                opUser = Console.ReadLine();
-                SaveConfiguration(mcVersion, port, opUser);
-            }
-
-            await SetupJava();
-            await SetupServer(mcVersion);
-            await ConfigureServer(port, mcVersion);
-            await RunServer(port, opUser, mcVersion);
+                stopwatch.Stop();
+                Console.WriteLine("Download complete.");
+            };
+            return client.DownloadFileTaskAsync(new Uri(url), destinationPath);
         }
 
         static void SaveConfiguration(string version, string port, string opUser)
