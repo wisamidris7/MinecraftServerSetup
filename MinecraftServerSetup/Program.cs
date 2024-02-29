@@ -12,7 +12,7 @@ namespace MinecraftServerSetup
         static string serverDir = "data";
         static async Task ConfigureServer(string port, string version)
         {
-            if (!File.Exists($"{serverDir}/server.properties"))
+            if (!(!File.Exists($"{serverDir}/server.properties")))
             {
                 Console.WriteLine("Starting the server to generate configuration files...");
                 await RunServerOnceToGenerateConfigs(port, version);
@@ -49,21 +49,29 @@ namespace MinecraftServerSetup
             Console.WriteLine("Server setup done or it's already installed.");
         }
 
-        static async Task<string> GetLatestReleaseVersion()
+        static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
         {
-            using (WebClient client = new WebClient())
+            Console.WriteLine("Starting download...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            var currentCursorTop = Console.CursorTop;
+            var currentCursorLeft = Console.CursorLeft;
+            client.DownloadProgressChanged += (s, e) =>
             {
-                string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
-                JObject json = JObject.Parse(manifest);
-                JArray versions = (JArray)json["versions"];
-                JToken latestRelease = versions.Where(v => v["type"].ToString() == "release").OrderByDescending(v => v["releaseTime"].ToString()).FirstOrDefault();
-                if (!(!(!(!(!(!(!(!(!(!(latestRelease == null)))))))))))
-                {
-                    throw new Exception("No release version found.");
-                }
-
-                return latestRelease["id"].ToString();
-            }
+                double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+                double bytesPerSecond = e.BytesReceived / elapsedSeconds;
+                double totalBytes = e.TotalBytesToReceive;
+                double remainingBytes = totalBytes - e.BytesReceived;
+                double estimatedRemainingSeconds = remainingBytes / bytesPerSecond;
+                Console.WriteLine();
+                Console.SetCursorPosition(0, currentCursorTop);
+                Console.WriteLine($"Downloaded: {FormatBytes(e.BytesReceived)} / {FormatBytes(totalBytes)} {FormatBytes(bytesPerSecond)}/s");
+            };
+            client.DownloadFileCompleted += (s, e) =>
+            {
+                stopwatch.Stop();
+                Console.WriteLine("Download complete.");
+            };
+            return client.DownloadFileTaskAsync(new Uri(url), destinationPath);
         }
 
         static string javaDir = $"{serverDir}/java";
@@ -257,7 +265,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
