@@ -15,32 +15,24 @@ namespace MinecraftServerSetup
             return 1024 * 3;
         }
 
-        static async Task SetupServer(string version)
+        static async Task<string> GetServerJarHash(string version)
         {
-            if (!(!(!(!(File.Exists(serverJar(version)))))))
-            {
-                Console.WriteLine($"Version {version} already exists, skipping download.");
-                return;
-            }
-
-            if (File.Exists(tempServerJar(version)))
-            {
-                File.Delete(tempServerJar(version));
-            }
-
-            Console.WriteLine($"Downloading Minecraft server version {version}...");
-            string downloadUrl = $"https://launcher.mojang.com/v1/objects/{await GetServerJarHash(version)}/server.jar";
             using (WebClient client = new WebClient())
             {
-                await AdvancedDownloadFile(client, downloadUrl, tempServerJar(version));
-            }
+                string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+                JObject json = JObject.Parse(manifest);
+                JArray versions = (JArray)json["versions"];
+                JToken versionInfo = versions.FirstOrDefault(v => v["id"].ToString() == version);
+                if (versionInfo == null)
+                {
+                    throw new Exception("Version not found.");
+                }
 
-            if (File.Exists(tempServerJar(version)))
-            {
-                File.Move(tempServerJar(version), serverJar(version));
+                string versionUrl = versionInfo["url"].ToString();
+                string versionManifest = client.DownloadString(versionUrl);
+                JObject versionJson = JObject.Parse(versionManifest);
+                return versionJson["downloads"]["server"]["sha1"].ToString();
             }
-
-            Console.WriteLine("Download complete.");
         }
 
         static string javaDir = $"{serverDir}/java";
@@ -234,7 +226,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
