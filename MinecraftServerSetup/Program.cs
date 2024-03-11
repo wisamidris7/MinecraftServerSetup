@@ -10,29 +10,21 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static async Task RunServerOnceToGenerateConfigs(string port, string version)
+        static async Task<string> GetLatestReleaseVersion()
         {
-            Process serverProcess = new Process();
-            serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
-            serverProcess.StartInfo.FileName = javaBinary;
-            serverProcess.StartInfo.Arguments = $"-Xmx2G -Xms2G -jar ../{serverJar(version)} nogui --port {port}";
-            serverProcess.StartInfo.RedirectStandardOutput = true;
-            serverProcess.StartInfo.RedirectStandardError = true;
-            serverProcess.StartInfo.UseShellExecute = false;
-            serverProcess.StartInfo.CreateNoWindow = true;
-            serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-            serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
-            serverProcess.Start();
-            serverProcess.BeginOutputReadLine();
-            serverProcess.BeginErrorReadLine();
-            serverProcess.WaitForExit();
-            Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            using (WebClient client = new WebClient())
             {
-                await Task.Delay(1000);
-            }
+                string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+                JObject json = JObject.Parse(manifest);
+                JArray versions = (JArray)json["versions"];
+                JToken latestRelease = versions.Where(v => v["type"].ToString() == "release").OrderByDescending(v => v["releaseTime"].ToString()).FirstOrDefault();
+                if (latestRelease == null)
+                {
+                    throw new Exception("No release version found.");
+                }
 
-            await Task.Delay(4000);
+                return latestRelease["id"].ToString();
+            }
         }
 
         static async Task RunServerOnceToGenerateConfigs(string port, string version)
@@ -74,7 +66,7 @@ namespace MinecraftServerSetup
 
         static async Task SetupJava()
         {
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!File.Exists(javaBinary))))))))))))))))))))))))))))))))))))))))
+            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!File.Exists(javaBinary)))))))))))))))))))))))))))))))))))))))))
             {
                 Console.WriteLine("Downloading the latest compatible Java version...");
                 string javaUrl = "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip";
