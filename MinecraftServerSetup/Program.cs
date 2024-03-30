@@ -10,29 +10,15 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static async Task RunServerOnceToGenerateConfigs(string port, string version)
+        static string FormatBytes(double bytes)
         {
-            Process serverProcess = new Process();
-            serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
-            serverProcess.StartInfo.FileName = javaBinary;
-            serverProcess.StartInfo.Arguments = $"-Xmx2G -Xms2G -jar ../{serverJar(version)} nogui --port {port}";
-            serverProcess.StartInfo.RedirectStandardOutput = true;
-            serverProcess.StartInfo.RedirectStandardError = true;
-            serverProcess.StartInfo.UseShellExecute = false;
-            serverProcess.StartInfo.CreateNoWindow = true;
-            serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-            serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
-            serverProcess.Start();
-            serverProcess.BeginOutputReadLine();
-            serverProcess.BeginErrorReadLine();
-            serverProcess.WaitForExit();
-            Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
-            {
-                await Task.Delay(1000);
-            }
-
-            await Task.Delay(4000);
+            if (bytes >= 1_073_741_824)
+                return $"{bytes / 1_073_741_824:F2} GB";
+            if (bytes >= 1_048_576)
+                return $"{bytes / 1_048_576:F2} MB";
+            if (bytes >= 1_024)
+                return $"{bytes / 1_024:F2} KB";
+            return $"{bytes} B";
         }
 
         static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
@@ -74,7 +60,7 @@ namespace MinecraftServerSetup
 
         static async Task SetupJava()
         {
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!File.Exists(javaBinary)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!File.Exists(javaBinary))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
             {
                 Console.WriteLine("Downloading the latest compatible Java version...");
                 string javaUrl = "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip";
