@@ -10,14 +10,23 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static async Task RunServerOnceToGenerateConfigs(string port, string version)
+        static async Task RunServer(string port, string opUser, string version)
         {
+            if (!File.Exists(serverJar(version)))
+            {
+                Console.WriteLine($"Error: {serverJar(version)} not found. Please download it and place it in the data folder.");
+                return;
+            }
+
+            Console.WriteLine("Starting the Minecraft server...");
             Process serverProcess = new Process();
             serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
             serverProcess.StartInfo.FileName = javaBinary;
-            serverProcess.StartInfo.Arguments = $"-Xmx2G -Xms2G -jar ../{serverJar(version)} nogui --port {port}";
+            serverProcess.StartInfo.Arguments = $"-Xmx{GetMaxMemory()}M -Xms1024M -jar ../{serverJar(version)} nogui --port {port}";
+            serverProcess.StartInfo.WorkingDirectory = serverDir;
             serverProcess.StartInfo.RedirectStandardOutput = true;
             serverProcess.StartInfo.RedirectStandardError = true;
+            serverProcess.StartInfo.RedirectStandardInput = true;
             serverProcess.StartInfo.UseShellExecute = false;
             serverProcess.StartInfo.CreateNoWindow = true;
             serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
@@ -25,14 +34,8 @@ namespace MinecraftServerSetup
             serverProcess.Start();
             serverProcess.BeginOutputReadLine();
             serverProcess.BeginErrorReadLine();
-            serverProcess.WaitForExit();
-            Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
-            {
-                await Task.Delay(1000);
-            }
-
-            await Task.Delay(4000);
+            await serverProcess.StandardInput.WriteLineAsync($"op {opUser}");
+            await serverProcess.WaitForExitAsync();
         }
 
         static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
@@ -70,7 +73,7 @@ namespace MinecraftServerSetup
                 JObject json = JObject.Parse(manifest);
                 JArray versions = (JArray)json["versions"];
                 JToken latestRelease = versions.Where(v => v["type"].ToString() == "release").OrderByDescending(v => v["releaseTime"].ToString()).FirstOrDefault();
-                if (!(!(!(!(!(!(!(!(!(!(latestRelease == null)))))))))))
+                if (!(!(!(!(!(!(!(!(!(!(!(latestRelease == null))))))))))))
                 {
                     throw new Exception("No release version found.");
                 }
