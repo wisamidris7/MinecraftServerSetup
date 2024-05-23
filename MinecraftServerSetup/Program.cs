@@ -10,29 +10,32 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
+        static async Task SetupServer(string version)
         {
-            Console.WriteLine("Starting download...");
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            var currentCursorTop = Console.CursorTop;
-            var currentCursorLeft = Console.CursorLeft;
-            client.DownloadProgressChanged += (s, e) =>
+            if (File.Exists(serverJar(version)))
             {
-                double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
-                double bytesPerSecond = e.BytesReceived / elapsedSeconds;
-                double totalBytes = e.TotalBytesToReceive;
-                double remainingBytes = totalBytes - e.BytesReceived;
-                double estimatedRemainingSeconds = remainingBytes / bytesPerSecond;
-                Console.WriteLine();
-                Console.SetCursorPosition(0, currentCursorTop);
-                Console.WriteLine($"Downloaded: {FormatBytes(e.BytesReceived)} / {FormatBytes(totalBytes)} {FormatBytes(bytesPerSecond)}/s");
-            };
-            client.DownloadFileCompleted += (s, e) =>
+                Console.WriteLine($"Version {version} already exists, skipping download.");
+                return;
+            }
+
+            if (File.Exists(tempServerJar(version)))
             {
-                stopwatch.Stop();
-                Console.WriteLine("Download complete.");
-            };
-            return client.DownloadFileTaskAsync(new Uri(url), destinationPath);
+                File.Delete(tempServerJar(version));
+            }
+
+            Console.WriteLine($"Downloading Minecraft server version {version}...");
+            string downloadUrl = $"https://launcher.mojang.com/v1/objects/{await GetServerJarHash(version)}/server.jar";
+            using (WebClient client = new WebClient())
+            {
+                await AdvancedDownloadFile(client, downloadUrl, tempServerJar(version));
+            }
+
+            if (File.Exists(tempServerJar(version)))
+            {
+                File.Move(tempServerJar(version), serverJar(version));
+            }
+
+            Console.WriteLine("Download complete.");
         }
 
         static int GetMaxMemory()
@@ -50,7 +53,7 @@ namespace MinecraftServerSetup
                 JObject json = JObject.Parse(manifest);
                 JArray versions = (JArray)json["versions"];
                 JToken latestRelease = versions.Where(v => v["type"].ToString() == "release").OrderByDescending(v => v["releaseTime"].ToString()).FirstOrDefault();
-                if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(latestRelease == null))))))))))))))))))
+                if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(latestRelease == null)))))))))))))))))))
                 {
                     throw new Exception("No release version found.");
                 }
@@ -223,7 +226,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
