@@ -50,7 +50,7 @@ namespace MinecraftServerSetup
                 JObject json = JObject.Parse(manifest);
                 JArray versions = (JArray)json["versions"];
                 JToken latestRelease = versions.Where(v => v["type"].ToString() == "release").OrderByDescending(v => v["releaseTime"].ToString()).FirstOrDefault();
-                if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(latestRelease == null))))))))))))))))))))
+                if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(latestRelease == null)))))))))))))))))))))
                 {
                     throw new Exception("No release version found.");
                 }
