@@ -10,29 +10,29 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static async Task RunServerOnceToGenerateConfigs(string port, string version)
+        static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
         {
-            Process serverProcess = new Process();
-            serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
-            serverProcess.StartInfo.FileName = javaBinary;
-            serverProcess.StartInfo.Arguments = $"-Xmx2G -Xms2G -jar ../{serverJar(version)} nogui --port {port}";
-            serverProcess.StartInfo.RedirectStandardOutput = true;
-            serverProcess.StartInfo.RedirectStandardError = true;
-            serverProcess.StartInfo.UseShellExecute = false;
-            serverProcess.StartInfo.CreateNoWindow = true;
-            serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-            serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
-            serverProcess.Start();
-            serverProcess.BeginOutputReadLine();
-            serverProcess.BeginErrorReadLine();
-            serverProcess.WaitForExit();
-            Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            Console.WriteLine("Starting download...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            var currentCursorTop = Console.CursorTop;
+            var currentCursorLeft = Console.CursorLeft;
+            client.DownloadProgressChanged += (s, e) =>
             {
-                await Task.Delay(1000);
-            }
-
-            await Task.Delay(4000);
+                double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+                double bytesPerSecond = e.BytesReceived / elapsedSeconds;
+                double totalBytes = e.TotalBytesToReceive;
+                double remainingBytes = totalBytes - e.BytesReceived;
+                double estimatedRemainingSeconds = remainingBytes / bytesPerSecond;
+                Console.WriteLine();
+                Console.SetCursorPosition(0, currentCursorTop);
+                Console.WriteLine($"Downloaded: {FormatBytes(e.BytesReceived)} / {FormatBytes(totalBytes)} {FormatBytes(bytesPerSecond)}/s");
+            };
+            client.DownloadFileCompleted += (s, e) =>
+            {
+                stopwatch.Stop();
+                Console.WriteLine("Download complete.");
+            };
+            return client.DownloadFileTaskAsync(new Uri(url), destinationPath);
         }
 
         static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
@@ -94,7 +94,7 @@ namespace MinecraftServerSetup
 
         static async Task SetupJava()
         {
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!File.Exists(javaBinary)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!File.Exists(javaBinary))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
             {
                 Console.WriteLine("Downloading the latest compatible Java version...");
                 string javaUrl = "https://download.oracle.com/java/21/latest/jdk-21_windows-x64_bin.zip";
