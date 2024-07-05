@@ -10,29 +10,24 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static async Task RunServerOnceToGenerateConfigs(string port, string version)
+        static async Task<string> GetServerJarHash(string version)
         {
-            Process serverProcess = new Process();
-            serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
-            serverProcess.StartInfo.FileName = javaBinary;
-            serverProcess.StartInfo.Arguments = $"-Xmx2G -Xms2G -jar ../{serverJar(version)} nogui --port {port}";
-            serverProcess.StartInfo.RedirectStandardOutput = true;
-            serverProcess.StartInfo.RedirectStandardError = true;
-            serverProcess.StartInfo.UseShellExecute = false;
-            serverProcess.StartInfo.CreateNoWindow = true;
-            serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-            serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
-            serverProcess.Start();
-            serverProcess.BeginOutputReadLine();
-            serverProcess.BeginErrorReadLine();
-            serverProcess.WaitForExit();
-            Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            using (WebClient client = new WebClient())
             {
-                await Task.Delay(1000);
-            }
+                string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
+                JObject json = JObject.Parse(manifest);
+                JArray versions = (JArray)json["versions"];
+                JToken versionInfo = versions.FirstOrDefault(v => v["id"].ToString() == version);
+                if (versionInfo == null)
+                {
+                    throw new Exception("Version not found.");
+                }
 
-            await Task.Delay(4000);
+                string versionUrl = versionInfo["url"].ToString();
+                string versionManifest = client.DownloadString(versionUrl);
+                JObject versionJson = JObject.Parse(versionManifest);
+                return versionJson["downloads"]["server"]["sha1"].ToString();
+            }
         }
 
         static async Task RunServerOnceToGenerateConfigs(string port, string version)
@@ -64,7 +59,7 @@ namespace MinecraftServerSetup
         static string javaBinary = $"{javaDir}/jdk-21.0.4/bin/java.exe";
         static async Task SetupServer(string version)
         {
-            if (!(!(!(!(!(!(!(!(!(!(!(File.Exists(serverJar(version))))))))))))))
+            if (!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(serverJar(version)))))))))))))))
             {
                 Console.WriteLine($"Version {version} already exists, skipping download.");
                 return;
