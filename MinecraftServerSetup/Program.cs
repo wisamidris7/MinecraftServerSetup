@@ -10,29 +10,43 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static Task AdvancedDownloadFile(WebClient client, string url, string destinationPath)
+        static async Task ConfigureServer(string port, string version)
         {
-            Console.WriteLine("Starting download...");
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            var currentCursorTop = Console.CursorTop;
-            var currentCursorLeft = Console.CursorLeft;
-            client.DownloadProgressChanged += (s, e) =>
+            if (!File.Exists($"{serverDir}/server.properties"))
             {
-                double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
-                double bytesPerSecond = e.BytesReceived / elapsedSeconds;
-                double totalBytes = e.TotalBytesToReceive;
-                double remainingBytes = totalBytes - e.BytesReceived;
-                double estimatedRemainingSeconds = remainingBytes / bytesPerSecond;
-                Console.WriteLine();
-                Console.SetCursorPosition(0, currentCursorTop);
-                Console.WriteLine($"Downloaded: {FormatBytes(e.BytesReceived)} / {FormatBytes(totalBytes)} {FormatBytes(bytesPerSecond)}/s");
-            };
-            client.DownloadFileCompleted += (s, e) =>
+                Console.WriteLine("Starting the server to generate configuration files...");
+                await RunServerOnceToGenerateConfigs(port, version);
+                return;
+            }
+
+            string[] properties = File.ReadAllLines($"{serverDir}/server.properties");
+            for (int i = 0; i < properties.Length; i++)
             {
-                stopwatch.Stop();
-                Console.WriteLine("Download complete.");
-            };
-            return client.DownloadFileTaskAsync(new Uri(url), destinationPath);
+                if (properties[i].StartsWith("online-mode="))
+                {
+                    properties[i] = "online-mode=false";
+                }
+
+                if (properties[i].StartsWith("server-port="))
+                {
+                    properties[i] = $"server-port={port}";
+                }
+            }
+
+            File.WriteAllLines($"{serverDir}/server.properties", properties);
+            string[] eula = File.ReadAllLines($"{serverDir}/eula.txt");
+            for (int i = 0; i < eula.Length; i++)
+            {
+                if (eula[i].StartsWith("eula=false"))
+                {
+                    eula[i] = "eula=true";
+                }
+            }
+
+            File.WriteAllLines($"{serverDir}/eula.txt", eula);
+            Console.Clear();
+            await Task.Delay(1000);
+            Console.WriteLine("Server setup done or it's already installed.");
         }
 
         static string tempServerJar(string version) => $"{serverDir}/tmp_server-{version}.jar";
@@ -44,7 +58,7 @@ namespace MinecraftServerSetup
             string mcVersion = string.Empty;
             string port = "25565";
             string opUser = string.Empty;
-            if (!(File.Exists(configFile)))
+            if (!(!(File.Exists(configFile))))
             {
                 Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
                 var usePrevConfig = Console.ReadLine().ToLower() == "y";
@@ -252,7 +266,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true)
             {
                 await Task.Delay(1000);
             }
