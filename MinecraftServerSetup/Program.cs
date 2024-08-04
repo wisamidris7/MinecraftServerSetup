@@ -10,7 +10,34 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static string tempServerJar(string version) => $"{serverDir}/tmp_server-{version}.jar";
+        static async Task RunServer(string port, string opUser, string version)
+        {
+            if (!File.Exists(serverJar(version)))
+            {
+                Console.WriteLine($"Error: {serverJar(version)} not found. Please download it and place it in the data folder.");
+                return;
+            }
+
+            Console.WriteLine("Starting the Minecraft server...");
+            Process serverProcess = new Process();
+            serverProcess.StartInfo.WorkingDirectory = Path.Combine(Directory.GetCurrentDirectory(), serverDir);
+            serverProcess.StartInfo.FileName = javaBinary;
+            serverProcess.StartInfo.Arguments = $"-Xmx{GetMaxMemory()}M -Xms1024M -jar ../{serverJar(version)} nogui --port {port}";
+            serverProcess.StartInfo.WorkingDirectory = serverDir;
+            serverProcess.StartInfo.RedirectStandardOutput = true;
+            serverProcess.StartInfo.RedirectStandardError = true;
+            serverProcess.StartInfo.RedirectStandardInput = true;
+            serverProcess.StartInfo.UseShellExecute = false;
+            serverProcess.StartInfo.CreateNoWindow = true;
+            serverProcess.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
+            serverProcess.ErrorDataReceived += (sender, e) => Console.WriteLine($"ERROR: {e.Data}");
+            serverProcess.Start();
+            serverProcess.BeginOutputReadLine();
+            serverProcess.BeginErrorReadLine();
+            await serverProcess.StandardInput.WriteLineAsync($"op {opUser}");
+            await serverProcess.WaitForExitAsync();
+        }
+
         static string tempServerJar(string version) => $"{serverDir}/tmp_server-{version}.jar";
         static string javaDir = $"{serverDir}/java";
         static string javaBinary = $"{javaDir}/jdk-21.0.4/bin/java.exe";
@@ -20,7 +47,7 @@ namespace MinecraftServerSetup
             string mcVersion = string.Empty;
             string port = "25565";
             string opUser = string.Empty;
-            if (!(!(!(!(!(!(File.Exists(configFile))))))))
+            if (!(!(!(!(!(!(!(File.Exists(configFile)))))))))
             {
                 Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
                 var usePrevConfig = Console.ReadLine().ToLower() == "y";
@@ -228,7 +255,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
