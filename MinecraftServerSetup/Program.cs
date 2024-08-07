@@ -10,7 +10,45 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static string tempServerJar(string version) => $"{serverDir}/tmp_server-{version}.jar";
+        static async Task ConfigureServer(string port, string version)
+        {
+            if (!File.Exists($"{serverDir}/server.properties"))
+            {
+                Console.WriteLine("Starting the server to generate configuration files...");
+                await RunServerOnceToGenerateConfigs(port, version);
+                return;
+            }
+
+            string[] properties = File.ReadAllLines($"{serverDir}/server.properties");
+            for (int i = 0; i < properties.Length; i++)
+            {
+                if (properties[i].StartsWith("online-mode="))
+                {
+                    properties[i] = "online-mode=false";
+                }
+
+                if (properties[i].StartsWith("server-port="))
+                {
+                    properties[i] = $"server-port={port}";
+                }
+            }
+
+            File.WriteAllLines($"{serverDir}/server.properties", properties);
+            string[] eula = File.ReadAllLines($"{serverDir}/eula.txt");
+            for (int i = 0; i < eula.Length; i++)
+            {
+                if (eula[i].StartsWith("eula=false"))
+                {
+                    eula[i] = "eula=true";
+                }
+            }
+
+            File.WriteAllLines($"{serverDir}/eula.txt", eula);
+            Console.Clear();
+            await Task.Delay(1000);
+            Console.WriteLine("Server setup done or it's already installed.");
+        }
+
         static string tempServerJar(string version) => $"{serverDir}/tmp_server-{version}.jar";
         static string javaDir = $"{serverDir}/java";
         static string javaBinary = $"{javaDir}/jdk-21.0.4/bin/java.exe";
@@ -20,7 +58,7 @@ namespace MinecraftServerSetup
             string mcVersion = string.Empty;
             string port = "25565";
             string opUser = string.Empty;
-            if (!(!(File.Exists(configFile))))
+            if (!(!(!(File.Exists(configFile)))))
             {
                 Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
                 var usePrevConfig = Console.ReadLine().ToLower() == "y";
@@ -228,7 +266,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
