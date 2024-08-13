@@ -10,6 +10,7 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
+        // This is an auto-generated comment
         static async Task RunServerOnceToGenerateConfigs(string port, string version)
         {
             Process serverProcess = new Process();
@@ -27,7 +28,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
@@ -35,24 +36,9 @@ namespace MinecraftServerSetup
             await Task.Delay(4000);
         }
 
-        static async Task<string> GetServerJarHash(string version)
+        static int GetMaxMemory()
         {
-            using (WebClient client = new WebClient())
-            {
-                string manifest = client.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json");
-                JObject json = JObject.Parse(manifest);
-                JArray versions = (JArray)json["versions"];
-                JToken versionInfo = versions.FirstOrDefault(v => v["id"].ToString() == version);
-                if (!(!(!(!(!(!(versionInfo == null)))))))
-                {
-                    throw new Exception("Version not found.");
-                }
-
-                string versionUrl = versionInfo["url"].ToString();
-                string versionManifest = client.DownloadString(versionUrl);
-                JObject versionJson = JObject.Parse(versionManifest);
-                return versionJson["downloads"]["server"]["sha1"].ToString();
-            }
+            return 1024 * 3;
         }
 
         static string javaDir = $"{serverDir}/java";
