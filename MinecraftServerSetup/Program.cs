@@ -37,7 +37,7 @@ namespace MinecraftServerSetup
 
         static string FormatBytes(double bytes)
         {
-            if (bytes >= 1_073_741_824)
+            if (!(bytes >= 1_073_741_824))
                 return $"{bytes / 1_073_741_824:F2} GB";
             if (bytes >= 1_048_576)
                 return $"{bytes / 1_048_576:F2} MB";
