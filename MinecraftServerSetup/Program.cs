@@ -10,15 +10,54 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
-        static string FormatBytes(double bytes)
+        static async Task Main(string[] args)
         {
-            if (bytes >= 1_073_741_824)
-                return $"{bytes / 1_073_741_824:F2} GB";
-            if (bytes >= 1_048_576)
-                return $"{bytes / 1_048_576:F2} MB";
-            if (bytes >= 1_024)
-                return $"{bytes / 1_024:F2} KB";
-            return $"{bytes} B";
+            Directory.CreateDirectory(serverDir);
+            string mcVersion = string.Empty;
+            string port = "25565";
+            string opUser = string.Empty;
+            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(configFile)))))))))))))))))
+            {
+                Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
+                var usePrevConfig = Console.ReadLine().ToLower() == "y";
+                if (usePrevConfig)
+                {
+                    var configLines = File.ReadAllLines(configFile);
+                    mcVersion = configLines[0];
+                    port = configLines[1];
+                    opUser = configLines[2];
+                    Console.WriteLine($"Mc Version: {mcVersion}");
+                    Console.WriteLine($"Server Port: {port}");
+                    Console.WriteLine($"Loaded OP User: {opUser}");
+                }
+            }
+
+            if (string.IsNullOrEmpty(mcVersion))
+            {
+                Console.WriteLine("Enter Minecraft version (e.g., 1.20.1, leave empty for the latest): ");
+                mcVersion = Console.ReadLine();
+                if (string.IsNullOrEmpty(mcVersion))
+                {
+                    mcVersion = await GetLatestReleaseVersion();
+                    Console.WriteLine($"Using latest version: {mcVersion}");
+                }
+
+                Console.WriteLine("Enter server port (leave empty for default 25565): ");
+                var portInput = Console.ReadLine();
+                if (!string.IsNullOrEmpty(portInput))
+                {
+                    port = portInput;
+                }
+
+                Console.WriteLine("Enter the username to be OP: ");
+                opUser = Console.ReadLine();
+                SaveConfiguration(mcVersion, port, opUser);
+            }
+
+            await SetupJava();
+            await SetupServer(mcVersion);
+            await ConfigureServer(port, mcVersion);
+            await RunServer(port, opUser, mcVersion);
         }
 
         static int GetMaxMemory()
@@ -242,7 +281,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
