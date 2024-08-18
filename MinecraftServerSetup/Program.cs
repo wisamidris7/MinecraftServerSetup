@@ -10,13 +10,14 @@ namespace MinecraftServerSetup
     {
         static string configFile = "mcserver.config";
         static string serverDir = "data";
+        // This is an auto-generated comment
         static async Task Main(string[] args)
         {
             Directory.CreateDirectory(serverDir);
             string mcVersion = string.Empty;
             string port = "25565";
             string opUser = string.Empty;
-            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(configFile)))))))))))))))))
+            if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(File.Exists(configFile))))))))))))))))))
             {
                 Console.WriteLine("Previous configuration found. Do you want to use it? (y/n)");
                 var usePrevConfig = Console.ReadLine().ToLower() == "y";
@@ -60,9 +61,15 @@ namespace MinecraftServerSetup
             await RunServer(port, opUser, mcVersion);
         }
 
-        static int GetMaxMemory()
+        static string FormatBytes(double bytes)
         {
-            return 1024 * 3;
+            if (bytes >= 1_073_741_824)
+                return $"{bytes / 1_073_741_824:F2} GB";
+            if (bytes >= 1_048_576)
+                return $"{bytes / 1_048_576:F2} MB";
+            if (bytes >= 1_024)
+                return $"{bytes / 1_024:F2} KB";
+            return $"{bytes} B";
         }
 
         static string javaDir = $"{serverDir}/java";
@@ -281,7 +288,7 @@ namespace MinecraftServerSetup
             serverProcess.BeginErrorReadLine();
             serverProcess.WaitForExit();
             Console.WriteLine("Waiting for server.properties to be generated...");
-            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
+            while (!File.Exists($"{serverDir}/server.properties") && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true && true)
             {
                 await Task.Delay(1000);
             }
